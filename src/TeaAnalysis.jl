@@ -26,7 +26,6 @@ using Cairo
 using Dates
 using DecisionTree
 
-include("constants.jl")
 include("load-data.jl")
 include("check-data.jl")
 include("preprocessing.jl")
@@ -37,9 +36,9 @@ include("random-forest.jl")
 
 # parameters
 env_var = "AT" # The environmental variable to be used for the analysis. Can be "AT", "ST", or "SM".
-tea = "green" # Tea type: Can be "green" or "roibos"
-data_ids = ["G_12M_17", "G_12M_18", "G_12M_19", "G_24M_18", "G_36M_19", "G_48M_21"] # green
-# data_ids = ["R_12M_17", "R_12M_18", "R_12M_19", "R_24M_18", "R_36M_19", "R_48M_21"] # roibos
+tea = "roibos" # Tea type: Can be "green" or "roibos"
+# data_ids = ["G_12M_17", "G_12M_18", "G_12M_19", "G_24M_18", "G_36M_19", "G_48M_21"] # green
+data_ids = ["R_12M_17", "R_12M_18", "R_12M_19", "R_24M_18", "R_36M_19", "R_48M_21"] # roibos
 
 retrieving_year = 0 # Year, during which the samples were retrieved. IMPORTANT: Can be set to 0 to get automatically from data_ids
 exposure_time = 0 # Exposure time in months (should be 12, 24, 36, or 48), IMPORTANT: Can be set to 0 to get automatically from data_ids
@@ -54,7 +53,7 @@ countRange = false # If true, the count range is calculated.
 
 n_folds = 1000 # Number of folds for cross-validation.
 sig_niveau = 0.05 # The significance level for the selectivity ratio.
-smooth = 0.15 # The smoothing parameter for the loess smoothing.
+smooth = 0.2 # The smoothing parameter for the loess smoothing.
 
 saveFrequencies = true # If true, the frequencies (input for PLSR model) are saved.
 plot = true # If true, plots are generated.
@@ -86,9 +85,13 @@ df_green = read_csv("./data/GreenTea_JL.csv")
 df_roibos = read_csv("./data/RoibosTea_JL.csv")
 if tea == "green"
     df_tea = df_green
+    palette_sign = ["#798665", "#91250b"]
+    main_col = "#798665"
 else
     tea == "roibos"
     df_tea = df_roibos
+    palette_sign = ["#bc4b19", "#91250b"]
+    main_col = "#bc4b19"
 end
 
 # load sampling dates
@@ -141,7 +144,31 @@ for data_id in data_ids
         )
     end
 end
-display(vec_rmse)
+
+# save rmse
+df_rmse = DataFrame(
+    rmse=vec_rmse,
+    id=data_ids
+)
+df_rmse.env = fill(env_var, nrow(df_rmse))
+df_rmse.season = fill(season, nrow(df_rmse))
+
+const results_path = "./rmse_results.csv"
+
+function add_rmse!(df_rmse::DataFrame)
+    # Check if file exists
+    if isfile(results_path)
+        df_old = CSV.read(results_path, DataFrame)
+        df_all = vcat(df_old, df_rmse)
+    else
+        df_all = df_rmse
+    end
+
+    # Write the updated result back to file (overwrite)
+    CSV.write(results_path, df_all)
+end
+
+add_rmse!(df_rmse)
 
 # postprocessing
 process_results(results, env_var, data_id, season, table_form)
