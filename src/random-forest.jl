@@ -137,10 +137,14 @@ function random_forest_importance(
     df_tea_selected.values = cleaned_vector
     df_tea_selected.position = df_tea[!, Symbol(id_col)]
 
+    
     df_rf_input = innerjoin(df_transformed, df_tea_selected, on=:position)
+    
+    n = 10  
 
-    not_all_missing = map(col -> !all(ismissing, col), eachcol(df_rf_input))
-    df_rf_input = df_rf_input[:, not_all_missing]
+    too_many_missing = map(col -> count(ismissing, col) > n, eachcol(df_rf_input))
+    df_rf_input = df_rf_input[:, Not(too_many_missing)]
+    display(df_rf_input)
     df_rf_input = dropmissing(select(df_rf_input, Not(:position)))
 
 
@@ -158,11 +162,23 @@ function random_forest_importance(
     std_y = std_y == 0 ? 1 : std_y
     y = (y .- mean(y, dims=1)) ./ std_y
 
+    # remove near constant columns
+    X = X[:, std.(eachcol(X)).>1e-6]
+
+    @show any(ismissing, X) || any(ismissing, y)
+
     # train random forest classifier
-    model = RandomForestRegressor(n_trees=100, max_depth=10, n_subfeatures=3)
+    model = RandomForestRegressor(
+    n_trees=100,
+    max_depth=10,
+    n_subfeatures=round(Int, sqrt(size(X, 2))),
+    min_samples_leaf=1, 
+    partial_sampling=1.0  
+)
     # fit model and get feature importances
     model = DecisionTree.fit!(model, X, y)
     importances = impurity_importance(model)
+    display(importances)
     feature_names = x_values
     df_importance = DataFrame(feature=feature_names, importance=importances)
     sort!(df_importance, :importance, rev=true)
