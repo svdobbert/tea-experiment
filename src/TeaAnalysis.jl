@@ -36,10 +36,10 @@ include("plot.jl")
 include("random-forest.jl")
 
 # parameters
-env_var = "ST" # The environmental variable to be used for the analysis. Can be "AT", "ST", or "SM".
-tea = "roibos" # Tea type: Can be "green" or "roibos"
-# data_ids = ["G_12M_17", "G_12M_18", "G_12M_19", "G_24M_18", "G_36M_19", "G_48M_21"] # green
-data_ids = ["R_12M_17", "R_12M_18", "R_12M_19", "R_24M_18", "R_36M_19", "R_48M_21"] # roibos
+env_var = "AT" # The environmental variable to be used for the analysis. Can be "AT", "ST", or "SM".
+tea = "green" # Tea type: Can be "green" or "roibos"
+data_ids = ["G_12M_17", "G_12M_18", "G_12M_19", "G_24M_18", "G_36M_19", "G_48M_21"] # green
+# data_ids = ["R_12M_17", "R_12M_18", "R_12M_19", "R_24M_18", "R_36M_19", "R_48M_21"] # roibos
 
 retrieving_year = 0 # Year, during which the samples were retrieved. IMPORTANT: Can be set to 0 to get automatically from data_ids
 exposure_time = 0 # Exposure time in months (should be 12, 24, 36, or 48), IMPORTANT: Can be set to 0 to get automatically from data_ids
@@ -52,7 +52,7 @@ date_format_in = "dd.mm.yyyy HH:MM" # The format of the input date column. Defau
 step = 0.1 # The step size for the selectivity ratio calculation.
 countRange = false # If true, the count range is calculated.
 
-n_folds = 10 # Number of folds for cross-validation.
+n_folds = 1000 # Number of folds for cross-validation.
 sig_niveau = 0.05 # The significance level for the selectivity ratio.
 smooth = 0.15 # The smoothing parameter for the loess smoothing.
 
