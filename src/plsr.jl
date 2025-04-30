@@ -258,7 +258,8 @@ function get_selectivity_ratio!(
 
     model_input = plsr_result[plsr_result.significance .== true, :]
     model = loess(model_input.x, model_input.explained_var, span=smooth)
-    plsr_result.explained_var_smooth_sig = Loess.predict(model, x)
+    xmin, xmax = extrema(model_input.x)
+    plsr_result.explained_var_smooth_sig = [xi ≥ xmin && xi ≤ xmax ? Loess.predict(model, [xi])[1] : missing for xi in x]
 
     if plot
         p =  plot_selectivity_ratio(plsr_result, data_id, env_var, season, save_pdf, save_png, plot_type)
